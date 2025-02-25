@@ -2,6 +2,12 @@ import {ErrorHandler, inject, Injectable, Injector, NgZone, runInInjectionContex
 import {MatDialog} from '@angular/material/dialog';
 import {Router} from "@angular/router";
 import {ErrorComponent} from "./error.component";
+import {LRUCache} from "typescript-lru-cache";
+
+interface ErrorStruct {
+    message?: string;
+    timeReported?: number;
+}
 
 @Injectable({
     providedIn: 'root'
@@ -12,7 +18,9 @@ export class CustomErrorHandler implements ErrorHandler {
 
     private lastTime: number = 0;
 
-
+    //prevent navigation cycle bugs from inifinte reporting by checking is in list of last
+    //10 exceptions only if occurred in last 2 seconds(should reduce to last 500ms perhaps)
+    private errorCache = new LRUCache<string, ErrorStruct>({ maxSize: 10 });
 
     handleError(e: any): void {
         try {
@@ -21,6 +29,8 @@ export class CustomErrorHandler implements ErrorHandler {
             //swallow this one to prevent infinite cycle though we stil hit infinite navigation cycle
             //bugs somehow - not sure the context yet
             console.error("Exception trying to report", err);
+            
+            //this.sentryErrorHandler.handleError(e);
         }
     }
 
@@ -34,7 +44,7 @@ export class CustomErrorHandler implements ErrorHandler {
          Trying to avoid 100 reports of same damn bug, so check an LRU cache and do not
          do anything if we already reported it within the last 2 seconds, checking timestamp and all
          ******************************/
-        if(this.errorInRecentlyReported(e))
+        if(this.isErrorReportedInLastTwoSeconds(e))
             return;
 
         this.lastTime = now;
@@ -79,10 +89,37 @@ export class CustomErrorHandler implements ErrorHandler {
         //this.sentryErrorHandler.handleError(e);
     }
 
-    private errorInRecentlyReported(e: any) {
-        //implement with LRU and timestamp and if timestamp is less than 2 seconds, do not
-        //report the same bug or risk a cycle
+    private isErrorReportedInLastTwoSeconds(e: any) {
+        //for production to prevent 100 reports of same exception -> (hit in navigtation bugs mostly creating infinite cycle bugs)
+
+        // const now = Date.now();
+        // const twoSecondsAgo = now - 2000;
+        //
+        // let uniqueString: string;
+        // if (e instanceof Error) {
+        //     // If e is an Error object
+        //     uniqueString += e.message + "-----";
+        //     uniqueString = e.stack || 'No stack trace';
+        // } else {
+        //     //ugh, hope everyone reports Error correctly!!!
+        //     return false;
+        // }
+        //
+        // const errorStruct = this.errorCache.get(uniqueString);
+        // if(errorStruct) {
+        //     if(errorStruct.timeReported > twoSecondsAgo) {
+        //         return true;
+        //     }
+        // }
+        //
+        // const errStruct: ErrorStruct = {
+        //     message: uniqueString,
+        //     timeReported: now
+        // };
+        //
+        // this.errorCache.set(uniqueString, errStruct);
         return false;
     }
+
 
 }
