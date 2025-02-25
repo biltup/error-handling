@@ -17,21 +17,21 @@ export class CustomErrorHandler implements ErrorHandler {
         const diff = now - this.lastTime;
         //console.log(`diff=${diff}  now=${now} lastTime=${this.lastTime} constructorName=${e.constructor.name}`);
 
-        if(diff < 2000) {
-            //navigation nastiness bugs can cause below code to cause more errors which
-            //bubble back to this block again resulting in cycle so cut the cycle here
-            //console.error("Solve above error that occurred above all these logs");
-
-            //not quite working.....  not sure how to override.
-            //we lose logs when using window.location.href = '/500-error'; but at least it works better!!
-            // Delay the retrieval of the NavService -> Router to avoid cyclic dependency errors
-            //IN GENERAL, NOT WORKING redirecting EVERY TIME!!!
-            // const router1 = this.injector.get(Router);
-            // const targetOfCurrentNavigation = router1. getCurrentNavigation()?.finalUrl;
-            // router1.navigate(['/500-error'], { browserUrl: targetOfCurrentNavigation });
-
-            return; //do nothing but log this one
-        }
+        // if(diff < 2000) {
+        //     //navigation nastiness bugs can cause below code to cause more errors which
+        //     //bubble back to this block again resulting in cycle so cut the cycle here
+        //     //console.error("Solve above error that occurred above all these logs");
+        //
+        //     //not quite working.....  not sure how to override.
+        //     //we lose logs when using window.location.href = '/500-error'; but at least it works better!!
+        //     // Delay the retrieval of the NavService -> Router to avoid cyclic dependency errors
+        //     //IN GENERAL, NOT WORKING redirecting EVERY TIME!!!
+        //     // const router1 = this.injector.get(Router);
+        //     // const targetOfCurrentNavigation = router1. getCurrentNavigation()?.finalUrl;
+        //     // router1.navigate(['/500-error'], { browserUrl: targetOfCurrentNavigation });
+        //
+        //     return; //do nothing but log this one
+        // }
         this.lastTime = now;
 
         console.error("Error.  Biltup Global Error Handler:", e);
