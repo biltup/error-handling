@@ -12,26 +12,31 @@ export class CustomErrorHandler implements ErrorHandler {
 
     private lastTime: number = 0;
 
+
+
     handleError(e: any): void {
+        try {
+            this.handleErrorImpl(e);
+        }catch (err) {
+            //swallow this one to prevent infinite cycle though we stil hit infinite navigation cycle
+            //bugs somehow - not sure the context yet
+            console.error("Exception trying to report", err);
+        }
+    }
+
+    handleErrorImpl(e: any): void {
+
         const now = Date.now();
         const diff = now - this.lastTime;
         //console.log(`diff=${diff}  now=${now} lastTime=${this.lastTime} constructorName=${e.constructor.name}`);
 
-        // if(diff < 2000) {
-        //     //navigation nastiness bugs can cause below code to cause more errors which
-        //     //bubble back to this block again resulting in cycle so cut the cycle here
-        //     //console.error("Solve above error that occurred above all these logs");
-        //
-        //     //not quite working.....  not sure how to override.
-        //     //we lose logs when using window.location.href = '/500-error'; but at least it works better!!
-        //     // Delay the retrieval of the NavService -> Router to avoid cyclic dependency errors
-        //     //IN GENERAL, NOT WORKING redirecting EVERY TIME!!!
-        //     // const router1 = this.injector.get(Router);
-        //     // const targetOfCurrentNavigation = router1. getCurrentNavigation()?.finalUrl;
-        //     // router1.navigate(['/500-error'], { browserUrl: targetOfCurrentNavigation });
-        //
-        //     return; //do nothing but log this one
-        // }
+        /****************************
+         Trying to avoid 100 reports of same damn bug, so check an LRU cache and do not
+         do anything if we already reported it within the last 2 seconds, checking timestamp and all
+         ******************************/
+        if(this.errorInRecentlyReported(e))
+            return;
+
         this.lastTime = now;
 
         console.error("Error.  Biltup Global Error Handler:", e);
@@ -59,7 +64,7 @@ export class CustomErrorHandler implements ErrorHandler {
         }
 
 
-        //This is not working and results in infinite bug reporting...
+        //This is not working
         //
         // const dialog = this.injector.get(MatDialog);
         //
@@ -72,6 +77,12 @@ export class CustomErrorHandler implements ErrorHandler {
 
         //huge IMPORTANT piece not firing in one special case...
         //this.sentryErrorHandler.handleError(e);
+    }
+
+    private errorInRecentlyReported(e: any) {
+        //implement with LRU and timestamp and if timestamp is less than 2 seconds, do not
+        //report the same bug or risk a cycle
+        return false;
     }
 
 }
