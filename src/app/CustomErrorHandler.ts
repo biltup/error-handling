@@ -58,11 +58,10 @@ export class CustomErrorHandler implements ErrorHandler {
             message = 'You encountered a client bug(code: 4560)';
         }
 
-        //NO IDEA WHY but this is broken now - wish I had docs on standard practice here
-        //this is working in my version but starting from scratch on brand new angular
-        //with type safety, this seems to have broken somehow...
+
+        //This is not working and results in infinite bug reporting...
         //
-        // const dialog = inject(MatDialog);
+        // const dialog = this.injector.get(MatDialog);
         //
         // this.ngZone.run(() => {
         //     console.log("ng zone running");
